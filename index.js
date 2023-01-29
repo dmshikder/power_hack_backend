@@ -50,6 +50,28 @@ async function run() {
     })
 
 
+//    update
+
+app.put('/update-billing/:id', async(req,res)=>{
+    const id =req.params.id;
+    const updatedUser = req.body;
+    const filter = {_id : ObjectId(id)};
+    const options = {upsert:true};
+    const updatedDoc = {
+        $set:{
+            fullName:updatedUser.fullName,
+            email:updatedUser.email,
+            phone:updatedUser.phone,
+            paidAmount:updatedUser.paidAmount
+        }
+    }
+
+    const result = await billingList.updateOne(filter,updatedDoc,options);
+    res.send(result)
+
+})
+
+
 
   } 
   finally {
