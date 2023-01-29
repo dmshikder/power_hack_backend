@@ -3,6 +3,7 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
 
 app.use(cors());
@@ -28,7 +29,30 @@ async function run() {
       const allBills = await cursor.toArray();
       res.send(allBills)
     });
-  } finally {
+
+    //add bill
+
+    app.post('/add-billing', async(req,res)=>{
+        const newBill= req.body;
+        console.log('adding new bill', newBill);
+        const result = await billingList.insertOne(newBill);
+        res.send(result)
+    });
+
+
+    //delete
+
+    app.delete('/delete-billing/:id', async(req,res)=>{
+        const id =req.params.id;
+        const query = {_id:ObjectId(id)};
+        const result = await billingList.deleteOne(query);
+        res.send(result);
+    })
+
+
+
+  } 
+  finally {
   }
 }
 run().catch(console.dir);
