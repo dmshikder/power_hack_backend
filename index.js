@@ -3,6 +3,7 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config();
 const { MongoClient, ServerApiVersion } = require("mongodb");
+const jwt =require('jsonwebtoken')
 const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
 
@@ -22,13 +23,39 @@ async function run() {
   try {
     await client.connect();
     const billingList = client.db("power_hack").collection("billing-list");
+    const userList = client.db("power_hack").collection("user-list");
 
     app.get("/billing-list", async (req, res) => {
-      const query = {};
-      const cursor = billingList.find(query);
-      const allBills = await cursor.toArray();
-      res.send(allBills)
-    });
+        const query = {};
+        const cursor = billingList.find(query);
+        const allBills = await cursor.toArray();
+        res.send(allBills)
+      });
+
+
+      // login 
+
+      app.post('/api/login', async(req,res)=>{
+        const user = await userList.findOne({
+          email:req.body.email,
+          password:req.body.password,
+
+        })
+
+        if(user){
+
+          const token =jwt.sign({
+            email:user.email,
+            name: user.name
+          }, 'secret123')
+          return res.json({status:'ok', user:token})
+        }
+        else{
+          return res.json({status:'error', user:false})
+        }
+
+        
+      })
 
     //add bill
 
@@ -38,6 +65,16 @@ async function run() {
         const result = await billingList.insertOne(newBill);
         res.send(result)
     });
+
+
+    //add user 
+
+    app.post('/registration', async(req,res)=>{
+      const newUser =req.body;
+      console.log('adding new user', newUser);
+      const result = await userList.insertOne(newUser);
+      res.send(result);
+    })
 
 
     //delete
@@ -69,6 +106,16 @@ app.put('/update-billing/:id', async(req,res)=>{
     const result = await billingList.updateOne(filter,updatedDoc,options);
     res.send(result)
 
+});
+
+
+// pagination
+
+app.get('/bill-count', async(req,res)=>{
+    const query= {};
+    const cursor = billingList.find(query);
+    const count = await billingList.estimatedDocumentCount();
+    res.send({count});
 })
 
 
